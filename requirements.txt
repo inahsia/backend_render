@@ -2,7 +2,7 @@ django==4.2.8
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 psycopg2-binary==2.9.9
-Pillow==10.1.0
+Pillow==11.0.0
 qrcode==7.4.2
 razorpay==1.4.1
 python-decouple==3.8
@@ -14,5 +14,5 @@ dj-database-url==2.1.0
 whitenoise==6.6.0
 gunicorn==21.2.0
 python-dateutil==2.8.2
-Pillow>=10.4.0
+
 
