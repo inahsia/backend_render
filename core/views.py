@@ -1424,26 +1424,35 @@ class BlackoutDateViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def create_razorpay_order(request):
     """Create a Razorpay order and return order details"""
-    serializer = PaymentOrderSerializer(data=request.data)
-    if serializer.is_valid():
-        amount = int(float(serializer.validated_data['amount']) * 100)  # Razorpay expects paise
-        booking_id = serializer.validated_data['booking_id']
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        order_data = {
-            'amount': amount,
-            'currency': 'INR',
-            'payment_capture': 1,
-            'notes': {'booking_id': str(booking_id)}
-        }
-        order = client.order.create(data=order_data)
-        return Response({
-            'order_id': order['id'],
-            'razorpay_key': settings.RAZORPAY_KEY_ID,
-            'amount': amount,
-            'currency': 'INR',
-            'booking_id': booking_id
-        })
-    return Response(serializer.errors, status=400)
+    try:
+        serializer = PaymentOrderSerializer(data=request.data)
+        if serializer.is_valid():
+            amount = int(float(serializer.validated_data['amount']) * 100)  # Razorpay expects paise
+            booking_id = serializer.validated_data['booking_id']
+            
+            # Check if Razorpay keys are set
+            if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
+                return Response({'error': 'Razorpay credentials not configured'}, status=500)
+            
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            order_data = {
+                'amount': amount,
+                'currency': 'INR',
+                'payment_capture': 1,
+                'notes': {'booking_id': str(booking_id)}
+            }
+            order = client.order.create(data=order_data)
+            return Response({
+                'order_id': order['id'],
+                'razorpay_key': settings.RAZORPAY_KEY_ID,
+                'amount': amount,
+                'currency': 'INR',
+                'booking_id': booking_id
+            })
+        return Response(serializer.errors, status=400)
+    except Exception as e:
+        print(f"Payment order creation error: {str(e)}")
+        return Response({'error': str(e)}, status=500)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
