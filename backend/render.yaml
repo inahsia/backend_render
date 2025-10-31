@@ -1,0 +1,38 @@
+services:
+  # Backend Service
+  - type: web
+    name: redball-cricket-backend
+    env: python
+    region: oregon
+    plan: free
+    rootDir: ./backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate
+    startCommand: gunicorn redball_academy.wsgi:application
+    pythonVersion: "3.11.10"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: redball-cricket-db
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+databases:
+  - name: redball-cricket-db
+    databaseName: redball_cricket_db
+    user: redball_cricket_db_user
+    plan: free
