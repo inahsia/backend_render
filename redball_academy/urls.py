@@ -5,9 +5,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
+
+
+def home(request):
+    return HttpResponse("Backend is running successfully 🎉")
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', home),  # 👈 Root URL — this fixes the 404 at /
     path('api/', include('core.urls')),
 ]
 
