@@ -1421,8 +1421,6 @@ class BlackoutDateViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_razorpay_order(request):
     """Create a Razorpay order and return order details"""
