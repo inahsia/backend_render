@@ -571,8 +571,8 @@ class OrganizerCheckInLog(models.Model):
         ('IN', 'Check In'),
         ('OUT', 'Check Out'),
     )
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, null=True, blank=True)
     booking = models.ForeignKey('Booking', on_delete=models.CASCADE, related_name='organizer_checkin_logs')
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     action = models.CharField(max_length=3, choices=ACTION_CHOICES)
     

@@ -748,35 +748,15 @@ class BookingViewSet(viewsets.ModelViewSet):
                         'error': f'Player with email {email} already exists in this booking'
                     }, status=status.HTTP_400_BAD_REQUEST)
                 
-                # Create or get user with email as username and "redball" as password
-                user, user_created = CustomUser.objects.get_or_create(
-                    email=email,
-                    defaults={
-                        'first_name': name,
-                    }
-                )
-                
-                if user_created:
-                    user.set_password('redball')
-                    user.save()
-                    print(f"✅ Created new user account: {email} (password: redball)")
-                    
-                    # Set user profile as player type
-                    profile, _ = UserProfile.objects.get_or_create(user=user)
-                    profile.user_type = 'player'
-                    profile.save()
-                else:
-                    print(f"ℹ️  Using existing user account: {email}")
-                
-                # Create player (this triggers the signal for QR and email)
+                # Create player WITHOUT user (let signal handle account creation, QR, and email)
                 player = Player.objects.create(
                     booking=booking,
                     name=name,
                     email=email,
                     phone=phone,
-                    user=user
+                    user=None  # Signal will create/attach user automatically
                 )
-                print(f"✅ Created player record for {name} ({email})")
+                print(f"✅ Created player record for {name} ({email}) - signal will handle account creation")
                 created_players.append(player)
         
         # Return created players
