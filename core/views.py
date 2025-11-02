@@ -816,10 +816,12 @@ class BookingViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
         logger.info(f"[ORGANIZER QR] Today's date: {today}, Booking slot date: {booking.slot.date}, Token slot date: {slot_date}")
 
-        if str(booking.slot.date) != slot_date or booking.slot.date != today:
+        # Allow scanning within 1 day of booking date
+        day_difference = abs((booking.slot.date - today).days)
+        if str(booking.slot.date) != slot_date or day_difference > 1:
             logger.error(f"[ORGANIZER QR] Date mismatch - Today: {today}, Booking: {booking.slot.date}, Token: {slot_date}")
             return Response(
-                {'error': 'This QR code is only valid on the booking date'},
+                {'error': 'This QR code is only valid within 1 day of the booking date'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1003,13 +1005,14 @@ class PlayerViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Check if booking date matches today
+        # Check if booking date matches today (allow 1 day before/after)
         today = timezone.now().date()
         booking_date = player.booking.slot.date
+        day_difference = abs((booking_date - today).days)
         
-        if booking_date != today:
+        if day_difference > 1:
             return Response(
-                {'error': f'This QR code is only valid on {booking_date}. Today is {today}.'},
+                {'error': f'This QR code is only valid within 1 day of {booking_date}. Today is {today}.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
