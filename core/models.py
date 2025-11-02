@@ -608,35 +608,52 @@ def ensure_player_account_qr_and_email(sender, instance: Player, created, **kwar
         return
 
     player = instance
+    print(f"🔔 Signal fired for player: {player.name} ({player.email})")
 
     # 1) Create/attach user account
     user = player.user
     if not user and player.email:
+        print(f"   📧 Player has no user account, creating one...")
         # Try to find existing user by email
         user = CustomUser.objects.filter(email__iexact=player.email).first()
         if not user:
+            print(f"   ✨ Creating NEW user account for {player.email}")
             user = CustomUser.objects.create_user(
                 email=player.email,
                 password='redball',
                 first_name=player.name,
             )
+            print(f"   ✅ User account created: {user.email}")
+        else:
+            print(f"   ℹ️  Found existing user: {user.email}")
         # Mark as player and attach
         profile, _ = UserProfile.objects.get_or_create(user=user)
         if profile.user_type != 'player':
             profile.user_type = 'player'
             profile.save()
+            print(f"   ✅ User profile set to 'player'")
         # Save relation
         player.user = user
         player.save(update_fields=['user'])
+        print(f"   ✅ Linked player to user account")
+    else:
+        if user:
+            print(f"   ℹ️  Player already has user: {user.email}")
+        else:
+            print(f"   ⚠️  Player has no email, skipping user creation")
 
     # 2) Generate QR code if missing
     if not player.qr_token:
         try:
+            print(f"   📱 Generating QR code for player...")
             player.generate_qr_code()
             player.save(update_fields=['qr_token', 'qr_code'])
+            print(f"   ✅ QR code generated")
         except Exception as e:
-            print(f"Failed to generate QR for player {player.id}: {e}")
+            print(f"   ❌ Failed to generate QR for player {player.id}: {e}")
             pass
+    else:
+        print(f"   ℹ️  Player already has QR code")
 
     # 3) Email credentials (best-effort). Prefer Celery if available
     try:
@@ -645,8 +662,10 @@ def ensure_player_account_qr_and_email(sender, instance: Player, created, **kwar
         sport_name = slot.sport.name if slot else ''
         date_str = str(slot.date) if slot else ''
         time_window = f"{slot.start_time} - {slot.end_time}" if slot else ''
+        print(f"   📧 Attempting to send credentials email to {player.email}...")
         if send_player_credentials_email:
             send_player_credentials_email.delay(player.email, player.name, sport_name, date_str, time_window)
+            print(f"   ✅ Email queued via Celery")
         else:
             send_mail(
                 subject='Your Player Account - Red Ball Cricket Academy',
@@ -668,8 +687,12 @@ def ensure_player_account_qr_and_email(sender, instance: Player, created, **kwar
                 recipient_list=[player.email] if player.email else [],
                 fail_silently=True,
             )
-    except Exception:
+            print(f"   ✅ Email sent directly")
+    except Exception as e:
+        print(f"   ⚠️  Email sending failed (non-critical): {e}")
         pass
+    
+    print(f"🎉 Auto account creation completed for {player.name}")
 
 
 # Automatically generate QR code for new users
