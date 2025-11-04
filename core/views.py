@@ -1152,8 +1152,8 @@ def dashboard_stats(request):
         'total_players': Player.objects.filter(booking__payment_verified=True, booking__is_cancelled=False).count(),
         'checked_in_today': Player.objects.filter(last_check_in__date=today, booking__payment_verified=True, booking__is_cancelled=False).count(),
         'available_slots': TimeSlot.objects.filter(is_booked=False, admin_disabled=False, date__gte=today).count(),
-        'sports_count': Sport.objects.filter(is_active=True).count(),
-        'slots_count': TimeSlot.objects.filter(date__gte=today).count(),
+        'total_sports': Sport.objects.filter(is_active=True).count(),
+        'total_slots': TimeSlot.objects.filter(date__gte=today).count(),
         'recent_logs': log_data,
     }
     
